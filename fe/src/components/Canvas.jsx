@@ -41,6 +41,25 @@ const Canvas = () => {
     }
   }
 
+  function drawRectangle(x1, y1, x2, y2, context, color) {
+    context.beginPath()
+    context.moveTo(x1, y1)
+    context.lineTo(x2, y1)
+    context.lineTo(x2, y2)
+    context.lineTo(x1, y2)
+    context.lineTo(x1, y1)
+    context.strokeStyle = color
+    context.stroke()
+  }
+
+
+  function handleMouseMove(e) {
+    if (isDragging) {
+      contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+      const { x:curX, y:curY } = getMousePos(canvasRef.current, e)
+      drawRectangle(x, y, curX, curY, contextRef.current, 'white')
+    }
+  }
 
   function handleMouseDown(e) {
     setIsDragging(true)
@@ -51,8 +70,6 @@ const Canvas = () => {
 
   function handleMouseUp(e) {
     setIsDragging(false)
-    const { x, y } = getMousePos(canvasRef.current, e)
-
   }
 
   return (
@@ -61,7 +78,7 @@ const Canvas = () => {
       ref={canvasRef}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
-      onMouseMove={drawLine}
+      onMouseMove={handleMouseMove}
 
     >
     </canvas>
