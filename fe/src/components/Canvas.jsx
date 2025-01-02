@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Line } from '../shapes/line.js'
+import { Rectangle } from '../shapes/rectangle.js'
+import { Circle } from '../shapes/circle.js'
+import { FreeLine } from '../shapes/freeline.js'
 
 const Canvas = () => {
 
@@ -10,10 +13,6 @@ const Canvas = () => {
   const objectsRef = useRef([])
 
   const [isDragging, setIsDragging] = useState(false)
-  const [x, setX] = useState(0)
-  const [y, setY] = useState(0)
-  const [prevX, setPrevX] = useState(0)
-  const [prevY, setPrevY] = useState(0)
   
   useEffect(() => {
     const canvas = canvasRef.current
@@ -34,53 +33,24 @@ const Canvas = () => {
     }
   }
 
-  function drawLine(e) {
-    if (isDragging) {
-      const { x: curX, y: curY } = getMousePos(canvasRef.current, e)
-      contextRef.current.moveTo(x, y)
-      contextRef.current.lineTo(curX, curY)
-      contextRef.current.lineWidth = 4
-      contextRef.current.strokeStyle = 'white'
-      contextRef.current.stroke()
-      setX(curX)
-      setY(curY)
-    }
-  }
-
-  function drawRectangle(x1, y1, x2, y2, context, color) {
-    context.beginPath()
-    context.moveTo(x1, y1)
-    context.lineTo(x2, y1)
-    context.lineTo(x2, y2)
-    context.lineTo(x1, y2)
-    context.lineTo(x1, y1)
-    context.strokeStyle = color
-    context.stroke()
-  }
-
-  function drawFillRectangle(x1, y1, x2, y2, context, color) {
-    context.beginPath()
-    context.moveTo(x1, y1)
-    context.lineTo(x2, y1)
-    context.lineTo(x2, y2)
-    context.lineTo(x1, y2)
-    context.lineTo(x1, y1)
-    context.fillStyle = color
-    context.fill()
-  }
-
-
   function handleMouseMove(e) {
     if (isDragging) {
-      // contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
-      // drawFillRectangle(x, y, prevX, prevY, contextRef.current, 'black')
       const { x: curX, y: curY } = getMousePos(canvasRef.current, e)
-      // drawRectangle(x, y, curX, curY, contextRef.current, 'white')
-      // setPrevX(curX)
-      // setPrevY(curY)
       if (tool === "line") {
         const line = objectsRef.current[objectsRef.current.length - 1]
-        line.endPoint = [curX, curY]
+        line.endPoints = [curX, curY]
+      } else if (tool === "rectangle") {
+        const rectangle = objectsRef.current[objectsRef.current.length - 1]
+        rectangle.endPoints = [curX, curY]
+      } else if (tool === "circle") {
+        const circle = objectsRef.current[objectsRef.current.length - 1]
+        circle.endPoints = [curX, curY]
+      } else if (tool === "freeline") {
+        const freeline = objectsRef.current[objectsRef.current.length - 1]
+        if (curX !== freeline.endPoints[0] || curY !== freeline.endPoints[1]) {
+          freeline.points.push(freeline.endPoints)
+          freeline.endPoints = [curX, curY]
+        }
       }
     }
   }
@@ -88,19 +58,25 @@ const Canvas = () => {
   function handleMouseDown(e) {
     setIsDragging(true)
     const { x, y } = getMousePos(canvasRef.current, e)
-    setX(x)
-    setY(y)
-    setPrevX(x)
-    setPrevY(y)
 
     if (tool === "line") {
       objectsRef.current.push(new Line(x, y))
-      console.log(objectsRef.current)
+    } else if (tool === "rectangle") {
+      objectsRef.current.push(new Rectangle(x, y))
+    } else if (tool === "circle") {
+      objectsRef.current.push(new Circle(x, y))
+    } else if (tool === "freeline") {
+      objectsRef.current.push(new FreeLine(x, y))
     }
+    console.log(objectsRef.current)
   }
 
   function handleMouseUp(e) {
     setIsDragging(false)
+    const shape = objectsRef.current.pop()
+    if (Math.abs(shape.startPoints[0] - shape.endPoints[0]) > 2 || Math.abs(shape.startPoints[1] - shape.endPoints[1]) > 2) {
+      objectsRef.current.push(shape)
+    }
   }
 
   function redrawCanvas() {
@@ -116,7 +92,7 @@ const Canvas = () => {
   return (
     <div className='h-full w-full relative'>
       <div className='absolute z-10 bg-stone-200 top-10 left-10 rounded-md'>
-        <button className={`size-10 p-3 hover:bg-white rounded-l-md ${tool === 'pencil' ? 'bg-white' : ''}`} onClick={() => setTool('pencil')}><img src="pencil.png" alt="" /></button>
+        <button className={`size-10 p-3 hover:bg-white rounded-l-md ${tool === 'freeline' ? 'bg-white' : ''}`} onClick={() => setTool('freeline')}><img src="pencil.png" alt="" /></button>
         <button className={`size-10 p-3 hover:bg-white ${tool === 'line' ? 'bg-white' : ''}`} onClick={() => setTool('line')}><img src="line.png" alt="" /></button>
         <button className={`size-10 p-3 hover:bg-white ${tool === 'rectangle' ? 'bg-white' : ''}`} onClick={() => setTool('rectangle')}><img src="rectangle.png" alt="" /></button>
         <button className={`size-10 p-3 hover:bg-white rounded-r-md ${tool === 'circle' ? 'bg-white' : ''}`} onClick={() => setTool('circle')}><img src="circle.png" alt="" /></button>
@@ -127,7 +103,6 @@ const Canvas = () => {
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
-
       >
       </canvas>
     </div>
