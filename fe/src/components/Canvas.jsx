@@ -13,6 +13,12 @@ const Canvas = () => {
   const objectsRef = useRef([])
 
   const [isDragging, setIsDragging] = useState(false)
+
+  useEffect(() => {
+    const socket = new WebSocket('ws://localhost:3000')
+
+    
+  }, [])
   
   useEffect(() => {
     const canvas = canvasRef.current
