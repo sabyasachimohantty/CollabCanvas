@@ -8,7 +8,7 @@ export class Line {
         context.beginPath();
         context.moveTo(this.startPoints[0], this.startPoints[1])
         context.lineTo(this.endPoints[0], this.endPoints[1])
-        context.lineWidth = 4
+        context.lineWidth = 3
         context.strokeStyle = 'white'
         context.stroke()
         context.closePath()

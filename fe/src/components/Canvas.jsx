@@ -8,6 +8,7 @@ const Canvas = () => {
 
   const canvasRef = useRef(null)
   const contextRef = useRef(null)
+  const socketRef = useRef(null)
 
   const [tool, setTool] = useState(null)
   const objectsRef = useRef([])
@@ -15,11 +16,58 @@ const Canvas = () => {
   const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
-    const socket = new WebSocket('ws://localhost:3000')
+    socketRef.current = new WebSocket('ws://localhost:3000')
 
-    
+    socketRef.current.addEventListener('open', () => {
+      console.log("Websocket connection established")
+    })
+
+    socketRef.current.addEventListener('message', (event) => {
+      const message = JSON.parse(event.data)
+      console.log(message)
+      if (message.shapeType === 'freeline') {
+        const { startPoints, endPoints, points } = message.data
+        const shape = new FreeLine(startPoints[0], startPoints[1])
+        shape.endPoints = endPoints
+        shape.points = points
+        console.log(shape)
+        objectsRef.current.push(shape)
+      } else if (message.shapeType === 'line') {
+        const { startPoints, endPoints } = message.data
+        const shape = new Line(startPoints[0], startPoints[1])
+        shape.endPoints = endPoints
+        console.log(shape)
+        objectsRef.current.push(shape)
+      } else if (message.shapeType === 'rectangle') {
+        const { startPoints, endPoints } = message.data
+        const shape = new Rectangle(startPoints[0], startPoints[1])
+        shape.endPoints = endPoints
+        console.log(shape)
+        objectsRef.current.push(shape)
+      } else if (message.shapeType === 'circle') {
+        const { startPoints, endPoints } = message.data
+        const shape = new Circle(startPoints[0], startPoints[1])
+        shape.endPoints = endPoints
+        console.log(shape)
+        objectsRef.current.push(shape)
+      }
+    })
+
+    socketRef.current.addEventListener('error', (error) => {
+      console.log("Websockket error: ", error)
+    })
+
+    socketRef.current.addEventListener('close', () => {
+      console.log("Websocket connection closed")
+    })
+
+    // Cleanup
+    return () => {
+      socketRef.current.close()
+    }
+
   }, [])
-  
+
   useEffect(() => {
     const canvas = canvasRef.current
     const context = canvas.getContext('2d')
@@ -82,6 +130,7 @@ const Canvas = () => {
     const shape = objectsRef.current.pop()
     if (Math.abs(shape.startPoints[0] - shape.endPoints[0]) > 2 || Math.abs(shape.startPoints[1] - shape.endPoints[1]) > 2) {
       objectsRef.current.push(shape)
+      socketRef.current.send(JSON.stringify({ type: 'shape', shapeType: tool, data: shape }))
     }
   }
 

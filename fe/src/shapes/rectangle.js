@@ -12,6 +12,7 @@ export class Rectangle {
         context.lineTo(this.startPoints[0], this.endPoints[1])
         context.lineTo(this.startPoints[0], this.startPoints[1])
         context.strokeStyle = 'white'
+        context.lineWidth = 3
         context.stroke()
         context.closePath()
     }

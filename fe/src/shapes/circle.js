@@ -12,6 +12,7 @@ export class Circle {
         context.beginPath()
         context.ellipse(centreX, centreY, xRadius, yRadius, 0, 0, 2 * Math.PI)
         context.strokeStyle = "white"
+        context.lineWidth = 3
         context.stroke()
         context.closePath()
     }

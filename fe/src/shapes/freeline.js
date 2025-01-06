@@ -11,7 +11,7 @@ export class FreeLine {
             context.beginPath()
             context.moveTo(prev[0], prev[1])
             context.lineTo(point[0], point[1])
-            context.lineWidth = 4
+            context.lineWidth = 3
             context.strokeStyle = 'white'
             context.stroke()
             context.closePath()
