@@ -1,11 +1,18 @@
+import { BrowserRouter, Route, Routes } from 'react-router'
 import Canvas from "./components/Canvas"
+import HomePage from "./components/HomePage"
+
 
 function App() {
 
   return (
-    <div className="h-screen w-screen">
-      <Canvas />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/canvas/:id" element={<Canvas />} />
+      </Routes>
+    </BrowserRouter>
+      
   )
 }
 

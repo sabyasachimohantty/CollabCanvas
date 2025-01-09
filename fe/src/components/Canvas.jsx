@@ -3,8 +3,12 @@ import { Line } from '../shapes/line.js'
 import { Rectangle } from '../shapes/rectangle.js'
 import { Circle } from '../shapes/circle.js'
 import { FreeLine } from '../shapes/freeline.js'
+import { useParams } from 'react-router'
 
 const Canvas = () => {
+
+  const { id:canvasId }= useParams()
+  console.log(canvasId)
 
   const canvasRef = useRef(null)
   const contextRef = useRef(null)
@@ -16,7 +20,7 @@ const Canvas = () => {
   const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
-    socketRef.current = new WebSocket('ws://localhost:3000')
+    socketRef.current = new WebSocket('ws://localhost:3001')
 
     socketRef.current.addEventListener('open', () => {
       console.log("Websocket connection established")
@@ -145,7 +149,7 @@ const Canvas = () => {
   }, [])
 
   return (
-    <div className='h-full w-full relative'>
+    <div className='h-screen w-screen relative'>
       <div className='absolute z-10 bg-stone-200 top-10 left-10 rounded-md'>
         <button className={`size-10 p-3 hover:bg-white rounded-l-md ${tool === 'freeline' ? 'bg-white' : ''}`} onClick={() => setTool('freeline')}><img src="pencil.png" alt="" /></button>
         <button className={`size-10 p-3 hover:bg-white ${tool === 'line' ? 'bg-white' : ''}`} onClick={() => setTool('line')}><img src="line.png" alt="" /></button>
