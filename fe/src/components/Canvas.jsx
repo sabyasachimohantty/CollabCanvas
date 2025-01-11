@@ -7,8 +7,7 @@ import { useParams } from 'react-router'
 
 const Canvas = () => {
 
-  const { id:canvasId }= useParams()
-  console.log(canvasId)
+  const { id: canvasId }= useParams()
 
   const canvasRef = useRef(null)
   const contextRef = useRef(null)
@@ -24,36 +23,37 @@ const Canvas = () => {
 
     socketRef.current.addEventListener('open', () => {
       console.log("Websocket connection established")
+      socketRef.current.send(JSON.stringify({ type: "init", canvasId: canvasId }))
     })
 
     socketRef.current.addEventListener('message', (event) => {
       const message = JSON.parse(event.data)
       console.log(message)
-      if (message.shapeType === 'freeline') {
-        const { startPoints, endPoints, points } = message.data
-        const shape = new FreeLine(startPoints[0], startPoints[1])
-        shape.endPoints = endPoints
-        shape.points = points
-        console.log(shape)
-        objectsRef.current.push(shape)
-      } else if (message.shapeType === 'line') {
-        const { startPoints, endPoints } = message.data
-        const shape = new Line(startPoints[0], startPoints[1])
-        shape.endPoints = endPoints
-        console.log(shape)
-        objectsRef.current.push(shape)
-      } else if (message.shapeType === 'rectangle') {
-        const { startPoints, endPoints } = message.data
-        const shape = new Rectangle(startPoints[0], startPoints[1])
-        shape.endPoints = endPoints
-        console.log(shape)
-        objectsRef.current.push(shape)
-      } else if (message.shapeType === 'circle') {
-        const { startPoints, endPoints } = message.data
-        const shape = new Circle(startPoints[0], startPoints[1])
-        shape.endPoints = endPoints
-        console.log(shape)
-        objectsRef.current.push(shape)
+      if (message.type === 'init-canvas') {
+        initialiseCanvas(message.data)
+      } else {
+        if (message.shapeType === 'freeline') {
+          const { startPoints, endPoints, points } = message.data
+          const shape = new FreeLine(startPoints[0], startPoints[1])
+          shape.endPoints = endPoints
+          shape.points = points
+          objectsRef.current.push(shape)
+        } else if (message.shapeType === 'line') {
+          const { startPoints, endPoints } = message.data
+          const shape = new Line(startPoints[0], startPoints[1])
+          shape.endPoints = endPoints
+          objectsRef.current.push(shape)
+        } else if (message.shapeType === 'rectangle') {
+          const { startPoints, endPoints } = message.data
+          const shape = new Rectangle(startPoints[0], startPoints[1])
+          shape.endPoints = endPoints
+          objectsRef.current.push(shape)
+        } else if (message.shapeType === 'circle') {
+          const { startPoints, endPoints } = message.data
+          const shape = new Circle(startPoints[0], startPoints[1])
+          shape.endPoints = endPoints
+          objectsRef.current.push(shape)
+        }
       }
     })
 
@@ -79,6 +79,33 @@ const Canvas = () => {
     canvas.width = window.innerWidth
     contextRef.current = context
   }, [])
+
+  function initialiseCanvas(drawings) {
+    drawings.forEach((drawing) => {
+      if (drawing.shapeType === 'freeline') {
+        const { startPoints, endPoints, points } = drawing.data
+        const shape = new FreeLine(startPoints[0], startPoints[1])
+        shape.endPoints = endPoints
+        shape.points = points
+        objectsRef.current.push(shape)
+      } else if (drawing.shapeType === 'line') {
+        const { startPoints, endPoints } = drawing.data
+        const shape = new Line(startPoints[0], startPoints[1])
+        shape.endPoints = endPoints
+        objectsRef.current.push(shape)
+      } else if (drawing.shapeType === 'rectangle') {
+        const { startPoints, endPoints } = drawing.data
+        const shape = new Rectangle(startPoints[0], startPoints[1])
+        shape.endPoints = endPoints
+        objectsRef.current.push(shape)
+      } else if (drawing.shapeType === 'circle') {
+        const { startPoints, endPoints } = drawing.data
+        const shape = new Circle(startPoints[0], startPoints[1])
+        shape.endPoints = endPoints
+        objectsRef.current.push(shape)
+      }
+    })
+  }
 
   function getMousePos(canvas, evt) {
     const rect = canvas.getBoundingClientRect() // abs. size of element
@@ -134,7 +161,7 @@ const Canvas = () => {
     const shape = objectsRef.current.pop()
     if (Math.abs(shape.startPoints[0] - shape.endPoints[0]) > 2 || Math.abs(shape.startPoints[1] - shape.endPoints[1]) > 2) {
       objectsRef.current.push(shape)
-      socketRef.current.send(JSON.stringify({ type: 'shape', shapeType: tool, data: shape }))
+      socketRef.current.send(JSON.stringify({ type: 'shape', shapeType: tool, data: shape, canvasId: canvasId }))
     }
   }
 
@@ -150,11 +177,11 @@ const Canvas = () => {
 
   return (
     <div className='h-screen w-screen relative'>
-      <div className='absolute z-10 bg-stone-200 top-10 left-10 rounded-md'>
-        <button className={`size-10 p-3 hover:bg-white rounded-l-md ${tool === 'freeline' ? 'bg-white' : ''}`} onClick={() => setTool('freeline')}><img src="pencil.png" alt="" /></button>
-        <button className={`size-10 p-3 hover:bg-white ${tool === 'line' ? 'bg-white' : ''}`} onClick={() => setTool('line')}><img src="line.png" alt="" /></button>
-        <button className={`size-10 p-3 hover:bg-white ${tool === 'rectangle' ? 'bg-white' : ''}`} onClick={() => setTool('rectangle')}><img src="rectangle.png" alt="" /></button>
-        <button className={`size-10 p-3 hover:bg-white rounded-r-md ${tool === 'circle' ? 'bg-white' : ''}`} onClick={() => setTool('circle')}><img src="circle.png" alt="" /></button>
+      <div className='absolute z-10 bg-green-400 top-10 left-10 rounded-md'>
+        <button className={`size-10 p-3 hover:bg-white rounded-l-md ${tool === 'freeline' ? 'bg-white' : ''}`} onClick={() => setTool('freeline')}><img src="/pencil.png" alt="" /></button>
+        <button className={`size-10 p-3 hover:bg-white ${tool === 'line' ? 'bg-white' : ''}`} onClick={() => setTool('line')}><img src="/line.png" alt="" /></button>
+        <button className={`size-10 p-3 hover:bg-white ${tool === 'rectangle' ? 'bg-white' : ''}`} onClick={() => setTool('rectangle')}><img src="/rectangle.png" alt="" /></button>
+        <button className={`size-10 p-3 hover:bg-white rounded-r-md ${tool === 'circle' ? 'bg-white' : ''}`} onClick={() => setTool('circle')}><img src="/circle.png" alt="" /></button>
       </div>
       <canvas
         className='bg-black h-full w-full'

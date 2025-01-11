@@ -2,24 +2,38 @@ const http = require("http")
 const { WebSocketServer } = require("ws")
 const { v4: uuidv4 } = require("uuid")
 const express = require('express')
+const cors = require('cors')
 
 const port = process.env.PORT || 3001
 const app = express()
 const server = http.createServer(app)
-const wsServer = new WebSocketServer({server})
+const wsServer = new WebSocketServer({ server })
 const clients = {}
 const canvases = {}
+const drawings = {}
 
 function handleMessage(bytes, clientId) {
     const message = JSON.parse(bytes.toString())
-    console.log(message)
-    const canvasId = message.canvasId
-    Object.keys(clients).forEach((uuid) => {
-        if (uuid !== clientId) {
-            const client = clients[uuid]
-            client.send(JSON.stringify(message))
+    if (message.type === "init") {
+        const canvasId = message.canvasId
+        if (!canvases[canvasId]) {
+            canvases[canvasId] = []
+            drawings[canvasId] = []
         }
-    })
+        canvases[canvasId].push(clientId)
+        const client = clients[clientId]
+        client.send(JSON.stringify({type: 'init-canvas', data: drawings[canvasId]}))
+    } else {
+        const canvasId = message.canvasId
+        drawings[canvasId].push({shapeType: message.shapeType, data: message.data})
+        console.log(canvases[canvasId])
+        canvases[canvasId].forEach((uuid) => {
+            if (uuid !== clientId) {
+                const client = clients[uuid]
+                client.send(JSON.stringify(message))
+            }
+        })
+    }
 }
 
 function handleClose(clientId) {
@@ -38,14 +52,11 @@ wsServer.on('connection', (ws) => {
 
 // middlewares
 app.use(express.json())
+app.use(cors())
 
 // express routes
 app.get('/health', (req, res) => {
     res.send('Server running')
-})
-
-app.post('/canvas/:canvasId', (req, res) => {
-    console.log(req.body)
 })
 
 server.listen(port, () => {
