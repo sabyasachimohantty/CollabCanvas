@@ -19,7 +19,7 @@ const Canvas = () => {
   const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
-    socketRef.current = new WebSocket('wss://collabcanvasapi.sabya.site')
+    socketRef.current = new WebSocket('https://collabcanvasapi.sabya.site')
 
     socketRef.current.addEventListener('open', () => {
       console.log("Websocket connection established")
